@@ -4,7 +4,7 @@ function App() {
   const [form, setForm] = React.useState({imap: '', smtp: '', user: '', password: ''});
 
   const fetchLog = async () => {
-    const res = await fetch('/log');
+    const res = await fetch('/api/log');
     const data = await res.json();
     setLog(data);
   };
@@ -13,14 +13,14 @@ function App() {
     if (!csv) return;
     const fd = new FormData();
     fd.append('file', csv);
-    const res = await fetch('/upload', {method: 'POST', body: fd});
+    const res = await fetch('/api/upload', {method: 'POST', body: fd});
     const data = await res.json();
     setForm({...form, csv: data.path});
     fetchLog();
   };
 
   const createDrafts = async () => {
-    const res = await fetch('/create', {
+    const res = await fetch('/api/create', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(form)
@@ -30,7 +30,7 @@ function App() {
   };
 
   const sendEmails = async () => {
-    const res = await fetch('/send', {
+    const res = await fetch('/api/send', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(form)
