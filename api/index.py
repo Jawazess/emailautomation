@@ -25,37 +25,63 @@ def upload():
 def create():
     data = request.get_json() or {}
     csv_path = data.get('csv')
-    imap = data.get('imap')
-    user = data.get('user')
-    password = data.get('password')
-    if not all([csv_path, imap, user, password]):
-        return jsonify({'error': 'missing params'}), 400
-    creator = DraftCreator(imap, user, password)
-    try:
-        count = creator.create_drafts(csv_path)
-        log(f'Created {count} drafts from {csv_path}')
-        return jsonify({'created': count})
-    except Exception as e:
-        log(f'Error: {e}')
-        return jsonify({'error': str(e)}), 500
+    token = data.get('token')
+    if token:
+        if not csv_path:
+            return jsonify({'error': 'missing params'}), 400
+        creator = DraftCreator('', '', '')
+        try:
+            count = creator.create_drafts_api(csv_path, token)
+            log(f'Created {count} drafts from {csv_path} via Gmail API')
+            return jsonify({'created': count})
+        except Exception as e:
+            log(f'Error: {e}')
+            return jsonify({'error': str(e)}), 500
+    else:
+        imap = data.get('imap')
+        user = data.get('user')
+        password = data.get('password')
+        if not all([csv_path, imap, user, password]):
+            return jsonify({'error': 'missing params'}), 400
+        creator = DraftCreator(imap, user, password)
+        try:
+            count = creator.create_drafts(csv_path)
+            log(f'Created {count} drafts from {csv_path}')
+            return jsonify({'created': count})
+        except Exception as e:
+            log(f'Error: {e}')
+            return jsonify({'error': str(e)}), 500
 
 @app.post('/send')
 def send():
     data = request.get_json() or {}
     csv_path = data.get('csv')
-    smtp = data.get('smtp')
-    user = data.get('user')
-    password = data.get('password')
-    if not all([csv_path, smtp, user, password]):
-        return jsonify({'error': 'missing params'}), 400
-    creator = DraftCreator('', user, password)
-    try:
-        count = creator.send_emails(csv_path, smtp)
-        log(f'Sent {count} emails from {csv_path}')
-        return jsonify({'sent': count})
-    except Exception as e:
-        log(f'Error: {e}')
-        return jsonify({'error': str(e)}), 500
+    token = data.get('token')
+    if token:
+        if not csv_path:
+            return jsonify({'error': 'missing params'}), 400
+        creator = DraftCreator('', '', '')
+        try:
+            count = creator.send_emails_api(csv_path, token)
+            log(f'Sent {count} emails from {csv_path} via Gmail API')
+            return jsonify({'sent': count})
+        except Exception as e:
+            log(f'Error: {e}')
+            return jsonify({'error': str(e)}), 500
+    else:
+        smtp = data.get('smtp')
+        user = data.get('user')
+        password = data.get('password')
+        if not all([csv_path, smtp, user, password]):
+            return jsonify({'error': 'missing params'}), 400
+        creator = DraftCreator('', user, password)
+        try:
+            count = creator.send_emails(csv_path, smtp)
+            log(f'Sent {count} emails from {csv_path}')
+            return jsonify({'sent': count})
+        except Exception as e:
+            log(f'Error: {e}')
+            return jsonify({'error': str(e)}), 500
 
 @app.get('/log')
 def get_log():

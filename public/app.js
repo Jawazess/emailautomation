@@ -1,7 +1,28 @@
 function App() {
   const [csv, setCsv] = React.useState(null);
   const [log, setLog] = React.useState([]);
-  const [form, setForm] = React.useState({imap: '', smtp: '', user: '', password: ''});
+  const [form, setForm] = React.useState({
+    imap: '',
+    smtp: '',
+    user: '',
+    password: '',
+    token: ''
+  });
+
+  const signIn = () => {
+    if (!window.google || !window.google.accounts) return;
+    const client = window.google.accounts.oauth2.initTokenClient({
+      client_id: window.GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID',
+      scope:
+        'https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/gmail.send',
+      callback: (resp) => {
+        if (resp.access_token) {
+          setForm((f) => ({ ...f, token: resp.access_token }));
+        }
+      },
+    });
+    client.requestAccessToken();
+  };
 
   const fetchLog = async () => {
     const res = await fetch('/api/log');
@@ -46,6 +67,10 @@ function App() {
       <h1>Email Draft Automation</h1>
       <input type="file" accept=".csv" onChange={e => setCsv(e.target.files[0])} />
       <button onClick={upload}>Upload CSV</button>
+      <div>
+        <button onClick={signIn}>Sign in with Google</button>
+        {form.token && <span style={{marginLeft: '8px'}}>Signed in</span>}
+      </div>
       <div>
         <input placeholder="IMAP server" value={form.imap} onChange={e => setForm({...form, imap: e.target.value})} />
         <input placeholder="SMTP server" value={form.smtp} onChange={e => setForm({...form, smtp: e.target.value})} />

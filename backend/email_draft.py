@@ -4,6 +4,9 @@ import time
 import imaplib
 import mimetypes
 from email.message import EmailMessage
+import base64
+import json
+from urllib import request as urlrequest
 
 class DraftCreator:
     """Utility to read a CSV file of recipients and create Gmail drafts."""
@@ -61,4 +64,49 @@ class DraftCreator:
                     msg = self._build_message(row)
                     smtp.send_message(msg)
                     count += 1
+        return count
+
+    # --- Gmail API helpers using OAuth token ---
+    def _gmail_request(self, url: str, token: str, data: dict) -> dict:
+        req = urlrequest.Request(
+            url,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+            },
+            data=json.dumps(data).encode(),
+        )
+        with urlrequest.urlopen(req) as resp:
+            return json.loads(resp.read())
+
+    def create_drafts_api(self, csv_path: str, token: str) -> int:
+        count = 0
+        with open(csv_path, newline="") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                msg = self._build_message(row)
+                b64 = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+                data = {"message": {"raw": b64}}
+                self._gmail_request(
+                    "https://gmail.googleapis.com/gmail/v1/users/me/drafts",
+                    token,
+                    data,
+                )
+                count += 1
+        return count
+
+    def send_emails_api(self, csv_path: str, token: str) -> int:
+        count = 0
+        with open(csv_path, newline="") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                msg = self._build_message(row)
+                b64 = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+                data = {"raw": b64}
+                self._gmail_request(
+                    "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
+                    token,
+                    data,
+                )
+                count += 1
         return count

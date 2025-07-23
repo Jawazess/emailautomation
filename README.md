@@ -1,6 +1,8 @@
 # Email Automation
 
-This repository provides a basic example of automating email workflows using Python and a minimal front-end interface. Originally it only created Gmail drafts from a CSV file, but it has been extended to optionally send the emails directly via SMTP. A simple React based page allows importing the CSV file, uploading it to the backend and either creating drafts or sending the emails in order.
+This repository provides a basic example of automating email workflows using Python and a minimal front-end interface. Originally it only created Gmail drafts from a CSV file, but it has been extended to optionally send the emails directly via SMTP. A simple React based page allows importing the CSV file, uploading it to the backend and either creating drafts or sending the emails in order. A Google sign‑in button can be used to authorize the application for creating and sending messages through the Gmail API.
+
+To enable Google authentication, define a `GOOGLE_CLIENT_ID` global variable in `public/index.html` with your OAuth client ID. The sign-in button will request access to send email on behalf of the signed in user and the resulting token is passed to the backend API.
 
 ## Deploying to Vercel
 
