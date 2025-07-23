@@ -46,3 +46,19 @@ class DraftCreator:
                 imap.append('Drafts', '', imaplib.Time2Internaldate(time.time()), msg.as_bytes())
                 count += 1
         return count
+
+    def send_emails(self, csv_path: str, smtp_server: str, smtp_port: int = 587) -> int:
+        """Send emails from a csv file using SMTP. Returns number of emails sent."""
+        import smtplib
+
+        count = 0
+        with smtplib.SMTP(smtp_server, smtp_port) as smtp:
+            smtp.starttls()
+            smtp.login(self.username, self.password)
+            with open(csv_path, newline='') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    msg = self._build_message(row)
+                    smtp.send_message(msg)
+                    count += 1
+        return count

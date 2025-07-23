@@ -1,7 +1,7 @@
 function App() {
   const [csv, setCsv] = React.useState(null);
   const [log, setLog] = React.useState([]);
-  const [form, setForm] = React.useState({imap: '', user: '', password: ''});
+  const [form, setForm] = React.useState({imap: '', smtp: '', user: '', password: ''});
 
   const fetchLog = async () => {
     const res = await fetch('/log');
@@ -29,6 +29,16 @@ function App() {
     fetchLog();
   };
 
+  const sendEmails = async () => {
+    const res = await fetch('/send', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(form)
+    });
+    await res.json();
+    fetchLog();
+  };
+
   React.useEffect(() => { fetchLog(); }, []);
 
   return (
@@ -38,9 +48,11 @@ function App() {
       <button onClick={upload}>Upload CSV</button>
       <div>
         <input placeholder="IMAP server" value={form.imap} onChange={e => setForm({...form, imap: e.target.value})} />
+        <input placeholder="SMTP server" value={form.smtp} onChange={e => setForm({...form, smtp: e.target.value})} />
         <input placeholder="Email" value={form.user} onChange={e => setForm({...form, user: e.target.value})} />
         <input placeholder="Password" type="password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} />
         <button onClick={createDrafts}>Create Drafts</button>
+        <button onClick={sendEmails}>Send Emails</button>
       </div>
       <h3>Log</h3>
       <div className="log">

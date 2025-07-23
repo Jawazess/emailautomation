@@ -53,6 +53,7 @@ class Handler(BaseHTTPRequestHandler):
             body = json.loads(self.rfile.read(length))
             csv_path = body.get('csv')
             imap = body.get('imap')
+            smtp = body.get('smtp')
             user = body.get('user')
             password = body.get('password')
             if not all([csv_path, imap, user, password]):
@@ -65,6 +66,27 @@ class Handler(BaseHTTPRequestHandler):
                 log(f'Created {count} drafts from {csv_path}')
                 self._set_headers()
                 self.wfile.write(json.dumps({'created': count}).encode())
+            except Exception as e:
+                log(f'Error: {e}')
+                self._set_headers(500)
+                self.wfile.write(json.dumps({'error': str(e)}).encode())
+        elif self.path == '/send':
+            length = int(self.headers.get('content-length', 0))
+            body = json.loads(self.rfile.read(length))
+            csv_path = body.get('csv')
+            smtp = body.get('smtp')
+            user = body.get('user')
+            password = body.get('password')
+            if not all([csv_path, smtp, user, password]):
+                self._set_headers(400)
+                self.wfile.write(json.dumps({'error': 'missing params'}).encode())
+                return
+            creator = DraftCreator('', user, password)
+            try:
+                count = creator.send_emails(csv_path, smtp)
+                log(f'Sent {count} emails from {csv_path}')
+                self._set_headers()
+                self.wfile.write(json.dumps({'sent': count}).encode())
             except Exception as e:
                 log(f'Error: {e}')
                 self._set_headers(500)
